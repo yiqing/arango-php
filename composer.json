@@ -1,0 +1,25 @@
+{
+    "name": "mike-roetgers/arango-php",
+    "type": "library",
+    "description": "ArangoDB PHP Driver",
+    "keywords": ["arango","arangodb","php","driver","client"],
+    "homepage": "https://github.com/MikeRoetgers/arango-php",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mike Roetgers",
+            "email": "mike@roetgers.org"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "ext-curl": "*",
+        "mike-roetgers/data-mapper": "dev-master"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.0.*"
+    },
+    "autoload": {
+        "psr-0": { "MikeRoetgers\\ArangoPHP": "src" }
+    }
+}
