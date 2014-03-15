@@ -4,9 +4,9 @@ namespace MikeRoetgers\ArangoPHP\HTTP;
 
 class Request
 {
-    const METHOD_GET = 'get';
-    const METHOD_POST = 'post';
-    const METHOD_DELETE = 'delete';
+    const METHOD_GET = 'GET';
+    const METHOD_POST = 'POST';
+    const METHOD_DELETE = 'DELETE';
 
     /**
      * @var string
@@ -40,7 +40,7 @@ class Request
      */
     public function setMethod($method)
     {
-        if (!in_array($method, array(self::METHOD_GET, self::METHOD_POST))) {
+        if (!in_array($method, array(self::METHOD_GET, self::METHOD_POST, self::METHOD_DELETE))) {
             throw new \InvalidArgumentException('The provided method "' . $method . '" is invalid.');
         }
         $this->method = $method;

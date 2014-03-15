@@ -29,6 +29,18 @@ class DatabaseManager
     private $client;
 
     /**
+     * @param Client $client
+     * @param DatabaseMapper $databaseMapper
+     * @param UserMapper $userMapper
+     */
+    public function __construct(Client $client, DatabaseMapper $databaseMapper, UserMapper $userMapper)
+    {
+        $this->client = $client;
+        $this->databaseMapper = $databaseMapper;
+        $this->userMapper = $userMapper;
+    }
+
+    /**
      * @return Database
      * @throws InvalidRequestException
      * @throws UnexpectedStatusCodeException
@@ -127,7 +139,7 @@ class DatabaseManager
         $response = $this->client->sendRequest($request);
 
         switch ($response->getStatusCode()) {
-            case 200:
+            case 201:
                 return (bool)$response->getBodyAsArray()['result'];
             case 400:
                 throw new InvalidRequestException();

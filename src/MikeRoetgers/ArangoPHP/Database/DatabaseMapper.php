@@ -14,6 +14,14 @@ class DatabaseMapper
      */
     private $autoMapper;
 
+    /**
+     * @param EntityAutoMapper $autoMapper
+     */
+    public function __construct(EntityAutoMapper $autoMapper)
+    {
+        $this->autoMapper = $autoMapper;
+    }
+
     public function mapEntityToArray($entity, array $mappings = array())
     {
         $keys = array('name', 'id', 'path', 'isSystem');

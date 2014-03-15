@@ -26,6 +26,11 @@ class CurlClient implements Client
         $url = $this->databaseUrl . $request->getPath();
         $curlHandle = curl_init($url);
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, $request->getMethod());
+        if ($request->getMethod() == Request::METHOD_POST) {
+            curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $request->getBody());
+        }
+
         $body = curl_exec($curlHandle);
 
         $response = new Response();

@@ -15,6 +15,14 @@ class UserMapper extends AbstractMapper implements ArrayToEntityMapper, EntityTo
     private $autoMapper;
 
     /**
+     * @param EntityAutoMapper $autoMapper
+     */
+    public function __construct(EntityAutoMapper $autoMapper)
+    {
+        $this->autoMapper = $autoMapper;
+    }
+
+    /**
      * @param array $row
      * @param array $mappings
      * @return User
