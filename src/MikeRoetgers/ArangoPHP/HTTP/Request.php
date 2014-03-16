@@ -24,6 +24,11 @@ class Request
     private $body;
 
     /**
+     * @var array
+     */
+    private $headers = array();
+
+    /**
      * @param string $path
      * @param string $method
      */
@@ -77,5 +82,22 @@ class Request
     public function getPath()
     {
         return $this->path;
+    }
+
+    /**
+     * @param string $name
+     * @param string $value
+     */
+    public function addHeader($name, $value)
+    {
+        $this->headers[$name] = $value;
+    }
+
+    /**
+     * @return array
+     */
+    public function getHeaders()
+    {
+        return $this->headers;
     }
 }
