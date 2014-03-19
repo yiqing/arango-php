@@ -92,10 +92,35 @@ class DocumentManager
 
     /**
      * @param string $collectionName
+     * @return array
+     * @throws UnknownCollectionException
+     * @throws UnexpectedStatusCodeException
+     */
+    public function getDocumentsFromCollection($collectionName)
+    {
+        $query = array('collectionName' => $collectionName);
+
+        $request = new Request('/_api/document?' . http_build_query($query));
+
+        $response = $this->client->sendRequest($request);
+
+        switch ($response->getStatusCode()) {
+            case 200:
+                return $response->getBodyAsArray()['documents'];
+            case 404:
+                throw new UnknownCollectionException();
+                break;
+            default:
+                throw new UnexpectedStatusCodeException($response);
+        }
+    }
+
+    /**
+     * @param string $collectionName
      * @param mixed $entity
      * @param bool $createCollection
      * @param bool $waitForSync
-     * @return bool
+     * @return DocumentMetadata
      * @throws InvalidRequestException
      * @throws UnknownCollectionException
      * @throws UnexpectedStatusCodeException
@@ -103,7 +128,7 @@ class DocumentManager
     public function createDocument($collectionName, $entity, $createCollection = false, $waitForSync = false)
     {
         if ($this->hasMapper($collectionName)) {
-            $entity = $this->getMapper($collectionName)->mapEntity($entity);
+            $entityData = $this->getMapper($collectionName)->mapEntity($entity);
         }
 
         $query = array(
@@ -131,10 +156,7 @@ class DocumentManager
         switch ($response->getStatusCode()) {
             case 201:
             case 202:
-                if ($entity instanceof MetadataAware) {
-
-                }
-                return true;
+                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
             case 400:
                 throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
                 break;
@@ -146,9 +168,125 @@ class DocumentManager
         }
     }
 
-    public function replaceDocument()
+    /**
+     * @param string $documentHandle
+     * @param mixed $entity
+     * @param bool $waitForSync
+     * @param null $rev
+     * @param null $policy
+     * @return DocumentMetadata
+     * @throws InvalidRequestException
+     * @throws UnexpectedStatusCodeException
+     * @throws Exception\UnknownDocumentException
+     *
+     * @todo if-match not implemented, $rev and $policy without functionality
+     */
+    public function replaceDocument($documentHandle, $entity, $waitForSync = false, $rev = null, $policy = null)
     {
+        $collectionName = explode('/', $documentHandle)[0];
+        if ($this->hasMapper($collectionName)) {
+            $entity = $this->getMapper($collectionName)->mapEntity($entity);
+        }
 
+        $query = array();
+
+        if ($waitForSync) {
+            $query['waitForSync'] = 'true';
+        } else {
+            $query['waitForSync'] = 'false';
+        }
+
+        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
+        $request->setMethod(Request::METHOD_PUT);
+        $request->setBody($entity);
+
+        $response = $this->client->sendRequest($request);
+
+        switch ($response->getStatusCode()) {
+            case 201:
+            case 202:
+                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
+            case 400:
+                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
+            case 404:
+                throw new UnknownDocumentException();
+            default:
+                throw new UnexpectedStatusCodeException($response);
+        }
+    }
+
+    /**
+     * @param string $documentHandle
+     * @param array $fields fields which shall be updated ["name" => "value]
+     * @param bool $keepNull
+     * @param bool $waitForSync
+     * @param null $rev
+     * @param null $policy
+     * @return DocumentMetadata
+     * @throws InvalidRequestException
+     * @throws UnexpectedStatusCodeException
+     * @throws Exception\UnknownDocumentException
+     *
+     * @todo if-match not implemented, $rev and $policy without functionality
+     */
+    public function partiallyUpdateDocument($documentHandle, array $fields, $keepNull = false, $waitForSync = false, $rev = null, $policy = null)
+    {
+        $query = array();
+        $query['waitForSync'] = ($waitForSync) ? 'true' : 'false';
+        $query['keepNull'] = ($keepNull) ? 'true' : 'false';
+
+        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
+        $request->setMethod(Request::METHOD_PATCH);
+        $request->setBody(json_encode($fields));
+
+        $response = $this->client->sendRequest($request);
+
+        switch ($response->getStatusCode()) {
+            case 201:
+            case 202:
+                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
+            case 400:
+                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
+            case 404:
+                throw new UnknownDocumentException();
+            default:
+                throw new UnexpectedStatusCodeException($response);
+        }
+    }
+
+    /**
+     * @param string $documentHandle
+     * @param bool $waitForSync
+     * @param null $rev
+     * @param null $policy
+     * @return bool
+     * @throws InvalidRequestException
+     * @throws UnexpectedStatusCodeException
+     * @throws Exception\UnknownDocumentException
+     *
+     * @todo if-match not implemented, $rev and $policy without functionality
+     */
+    public function deleteDocument($documentHandle, $waitForSync = false, $rev = null, $policy = null)
+    {
+        $query = array();
+        $query['waitForSync'] = ($waitForSync) ? 'true' : 'false';
+
+        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
+        $request->setMethod(Request::METHOD_DELETE);
+
+        $response = $this->client->sendRequest($request);
+
+        switch ($response->getStatusCode()) {
+            case 200:
+            case 202:
+                return true;
+            case 400:
+                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
+            case 404:
+                throw new UnknownDocumentException();
+            default:
+                throw new UnexpectedStatusCodeException($response);
+        }
     }
 
     /**
