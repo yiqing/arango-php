@@ -289,6 +289,21 @@ class DocumentManager
         }
     }
 
+    public function documentExists($documentHandle, $rev = null)
+    {
+        $request = new Request('/_api/document/' . $documentHandle, Request::METHOD_HEAD);
+        $response = $this->client->sendRequest($request);
+
+        switch ($response->getStatusCode()) {
+            case 200:
+                return true;
+            case 404:
+                return false;
+            default:
+                throw new UnexpectedStatusCodeException($response);
+        }
+    }
+
     /**
      * @param $collectionName
      * @return bool

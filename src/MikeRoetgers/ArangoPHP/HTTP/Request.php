@@ -9,6 +9,7 @@ class Request
     const METHOD_DELETE = 'DELETE';
     const METHOD_PUT = 'PUT';
     const METHOD_PATCH = 'PATCH';
+    const METHOD_HEAD = 'HEAD';
 
     /**
      * @var string
@@ -48,7 +49,7 @@ class Request
     public function setMethod($method)
     {
         if (!in_array($method, array(self::METHOD_GET, self::METHOD_POST, self::METHOD_DELETE, self::METHOD_PUT,
-            self::METHOD_PATCH))) {
+            self::METHOD_PATCH, self::METHOD_HEAD))) {
             throw new \InvalidArgumentException('The provided method "' . $method . '" is invalid.');
         }
         $this->method = $method;
