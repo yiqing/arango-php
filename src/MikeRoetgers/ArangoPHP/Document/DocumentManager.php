@@ -308,7 +308,7 @@ class DocumentManager
      * @param $collectionName
      * @return bool
      */
-    private function hasMapper($collectionName)
+    public function hasMapper($collectionName)
     {
         return isset($this->mappers[$collectionName]);
     }
@@ -317,7 +317,7 @@ class DocumentManager
      * @param $collectionName
      * @return DocumentMapper
      */
-    private function getMapper($collectionName)
+    public function getMapper($collectionName)
     {
         return $this->mappers[$collectionName];
     }
