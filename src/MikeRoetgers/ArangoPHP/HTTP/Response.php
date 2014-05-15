@@ -20,6 +20,11 @@ class Response
     private $contentType;
 
     /**
+     * @var Cursor
+     */
+    private $cursor;
+
+    /**
      * @return array
      */
     public function getBodyAsArray()
@@ -75,5 +80,19 @@ class Response
         $this->statusCode = $statusCode;
     }
 
+    /**
+     * @param Cursor $cursor
+     */
+    public function setCursor($cursor)
+    {
+        $this->cursor = $cursor;
+    }
 
+    /**
+     * @return Cursor
+     */
+    public function getCursor()
+    {
+        return $this->cursor;
+    }
 }
