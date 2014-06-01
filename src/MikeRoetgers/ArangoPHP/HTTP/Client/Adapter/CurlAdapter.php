@@ -3,6 +3,7 @@
 namespace MikeRoetgers\ArangoPHP\HTTP\Client\Adapter;
 
 use MikeRoetgers\ArangoPHP\HTTP\Request;
+use MikeRoetgers\ArangoPHP\HTTP\Response;
 
 class CurlAdapter implements Adapter
 {
