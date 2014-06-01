@@ -72,7 +72,7 @@ abstract class AbstractDocumentMapper implements DocumentMapper
         $result = array();
 
         foreach ($documents as $document) {
-            $this->mapDocument($document);
+            $result[] = $this->mapDocument($document);
         }
 
         return $result;
@@ -87,7 +87,7 @@ abstract class AbstractDocumentMapper implements DocumentMapper
         $result = array();
 
         foreach ($entities as $entity) {
-            $this->mapEntity($entity);
+            $result[] = $this->mapEntity($entity);
         }
 
         return $result;
