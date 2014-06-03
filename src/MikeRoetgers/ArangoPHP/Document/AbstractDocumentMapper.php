@@ -26,11 +26,18 @@ abstract class AbstractDocumentMapper implements DocumentMapper
     protected $fields = array();
 
     /**
-     * @param EntityAutoMapper $autoMapper
+     * @var DocumentMetadataMapper
      */
-    public function __construct(EntityAutoMapper $autoMapper)
+    protected $metadataMapper;
+
+    /**
+     * @param EntityAutoMapper $autoMapper
+     * @param DocumentMetadataMapper $metadataMapper
+     */
+    public function __construct(EntityAutoMapper $autoMapper, DocumentMetadataMapper $metadataMapper)
     {
         $this->autoMapper = $autoMapper;
+        $this->metadataMapper = $metadataMapper;
     }
 
     /**
@@ -40,6 +47,11 @@ abstract class AbstractDocumentMapper implements DocumentMapper
     public function mapDocument(array $document)
     {
         $entity = new $this->entity();
+
+        if (!empty($document['_key']) && $entity instanceof MetadataAware) {
+            $metadata = $this->metadataMapper->mapArrayToEntity($document);
+            $entity->setMetadata($metadata);
+        }
 
         foreach ($document as $key => $value) {
             $this->autoMapper->autoSet($key, $value, $entity);

@@ -50,6 +50,7 @@ class SimpleQueryManager
     public function findByExample($collectionName, array $example, $skip = 0, $limit = 1000)
     {
         $request = new Request('/_api/simple/by-example');
+        $request->setMethod(Request::METHOD_PUT);
 
         $body = array(
             'collection' => $collectionName,

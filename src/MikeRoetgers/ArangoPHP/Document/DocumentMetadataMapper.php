@@ -30,8 +30,12 @@ class DocumentMetadataMapper extends AbstractMapper implements ArrayToEntityMapp
     public function mapArrayToEntity(array $row, array $mappings = array())
     {
         $metadata = new DocumentMetadata();
+        $mappings = ['_id' => 'id', '_ref' => 'ref', '_key' => 'key'];
 
         foreach ($row as $key => $value) {
+            if ($key[0] != '_') {
+                continue;
+            }
             $key = $this->applyMapping($key, $mappings);
             $this->autoMapper->autoSet($key, $value, $metadata);
         }

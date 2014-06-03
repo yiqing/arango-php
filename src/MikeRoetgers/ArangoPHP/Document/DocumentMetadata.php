@@ -12,7 +12,7 @@ class DocumentMetadata
     /**
      * @var string
      */
-    private $ref;
+    private $rev;
 
     /**
      * @var string
@@ -52,11 +52,11 @@ class DocumentMetadata
     }
 
     /**
-     * @param string $ref
+     * @param string $rev
      */
-    public function setRef($ref)
+    public function setRef($rev)
     {
-        $this->ref = $ref;
+        $this->rev = $rev;
     }
 
     /**
@@ -64,6 +64,6 @@ class DocumentMetadata
      */
     public function getRef()
     {
-        return $this->ref;
+        return $this->rev;
     }
 }

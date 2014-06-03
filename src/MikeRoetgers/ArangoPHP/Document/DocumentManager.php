@@ -67,7 +67,7 @@ class DocumentManager
             case 200:
                 $collectionName = explode('/', $documentHandle)[0];
                 if ($this->hasMapper($collectionName)) {
-                    $result = $response->getBodyAsArray()['result'];
+                    $result = $response->getBodyAsArray();
                     $entity = $this->getMapper($collectionName)->mapDocument($result);
                     if ($entity instanceof MetadataAware) {
                         $metadata = $this->metadataMapper->mapArrayToEntity($result);
@@ -75,7 +75,7 @@ class DocumentManager
                     }
                     return $entity;
                 }
-                return $response->getBodyAsArray()['result'];
+                return $response->getBodyAsArray();
                 break;
             case 400:
                 throw new InvalidRequestException();
@@ -128,11 +128,11 @@ class DocumentManager
     public function createDocument($collectionName, $entity, $createCollection = false, $waitForSync = false)
     {
         if ($this->hasMapper($collectionName)) {
-            $entityData = $this->getMapper($collectionName)->mapEntity($entity);
+            $entity = $this->getMapper($collectionName)->mapEntity($entity);
         }
 
         $query = array(
-            'collectionName' => $collectionName
+            'collection' => $collectionName
         );
 
         if ($createCollection) {
