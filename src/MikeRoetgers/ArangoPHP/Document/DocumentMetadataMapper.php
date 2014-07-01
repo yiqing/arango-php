@@ -6,56 +6,41 @@ use MikeRoetgers\DataMapper\AbstractMapper;
 use MikeRoetgers\DataMapper\ArrayToEntityMapper;
 use MikeRoetgers\DataMapper\EntityAutoMapper;
 use MikeRoetgers\DataMapper\EntityToArrayMapper;
+use MikeRoetgers\DataMapper\GenericMapper;
 
-class DocumentMetadataMapper extends AbstractMapper implements ArrayToEntityMapper
+class DocumentMetadataMapper extends GenericMapper
 {
-    /**
-     * @var EntityAutoMapper
-     */
-    private $autoMapper;
-
-    /**
-     * @param EntityAutoMapper $autoMapper
-     */
     public function __construct(EntityAutoMapper $autoMapper)
     {
-        $this->autoMapper = $autoMapper;
+        parent::__construct(
+            $autoMapper,
+            '\\MikeRoetgers\\ArangoPHP\\Document\\DocumentMetadata',
+            array(
+                'id' => '_id',
+                'ref' => '_ref',
+                'key' => '_key'
+            )
+        );
     }
 
     /**
+     * Overwritten method because this mapper can skip nearly all attributes
+     *
      * @param array $row
-     * @param array $mappings
      * @return DocumentMetadata
      */
-    public function mapArrayToEntity(array $row, array $mappings = array())
+    public function mapArrayToEntity(array $row)
     {
-        $metadata = new DocumentMetadata();
-        $mappings = ['_id' => 'id', '_ref' => 'ref', '_key' => 'key'];
+        $entity = $this->createNewInstance();
 
         foreach ($row as $key => $value) {
             if ($key[0] != '_') {
                 continue;
             }
-            $key = $this->applyMapping($key, $mappings);
-            $this->autoMapper->autoSet($key, $value, $metadata);
+            $mappedKey = $this->applyReversedMapping($key);
+            $this->autoMapper->autoSet($mappedKey, $value, $entity);
         }
 
-        return $metadata;
-    }
-
-    /**
-     * @param array $rows
-     * @param array $mappings
-     * @return DocumentMetadata[]
-     */
-    public function massMapArrayToEntity(array $rows, array $mappings = array())
-    {
-        $result = array();
-
-        foreach ($rows as $row) {
-            $result[] = $this->mapArrayToEntity($row, $mappings);
-        }
-
-        return $result;
+        return $entity;
     }
 }

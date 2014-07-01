@@ -8,6 +8,7 @@ use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\UnexpectedStatusCodeException;
 use MikeRoetgers\ArangoPHP\HTTP\Request;
+use MikeRoetgers\DataMapper\GenericMapper;
 
 class CollectionManager
 {
@@ -17,7 +18,7 @@ class CollectionManager
     private $client;
 
     /**
-     * @var CollectionMapper
+     * @var GenericMapper
      */
     private $collectionMapper;
 

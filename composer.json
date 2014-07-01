@@ -14,7 +14,7 @@
     "require": {
         "php": ">=5.4.0",
         "ext-curl": "*",
-        "mike-roetgers/data-mapper": "dev-master"
+        "mike-roetgers/data-mapper": "0.1.*"
     },
     "autoload": {
         "psr-0": { "MikeRoetgers\\ArangoPHP": "src" }

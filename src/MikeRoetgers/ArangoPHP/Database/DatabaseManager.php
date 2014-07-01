@@ -10,11 +10,12 @@ use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\UnexpectedStatusCodeException;
 use MikeRoetgers\ArangoPHP\HTTP\Request;
 use MikeRoetgers\ArangoPHP\User\User;
 use MikeRoetgers\ArangoPHP\User\UserMapper;
+use MikeRoetgers\DataMapper\GenericMapper;
 
 class DatabaseManager
 {
     /**
-     * @var DatabaseMapper
+     * @var GenericMapper
      */
     private $databaseMapper;
 
