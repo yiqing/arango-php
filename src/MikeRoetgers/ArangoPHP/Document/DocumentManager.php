@@ -181,9 +181,9 @@ class DocumentManager
      *
      * @todo if-match not implemented, $rev and $policy without functionality
      */
-    public function replaceDocument(MetadataAware $entity, $waitForSync = false, $rev = null, $policy = null)
+    public function replaceDocument($documentHandle, $entity, $waitForSync = false, $rev = null, $policy = null)
     {
-        $collectionName = explode('/', $entity->getMetadata()->getId())[0];
+        $collectionName = explode('/', $documentHandle)[0];
         if ($this->hasMapper($collectionName)) {
             $entity = $this->getMapper($collectionName)->mapEntity($entity);
         }
@@ -196,7 +196,7 @@ class DocumentManager
             $query['waitForSync'] = 'false';
         }
 
-        $request = new Request('/_api/document/' . $entity->getMetadata()->getId() . '?' . http_build_query($query));
+        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
         $request->setMethod(Request::METHOD_PUT);
         $request->setBody($entity);
 
@@ -213,6 +213,18 @@ class DocumentManager
             default:
                 throw new UnexpectedStatusCodeException($response);
         }
+    }
+
+    /**
+     * @param MetadataAware $entity
+     * @param bool $waitForSync
+     * @param null $rev
+     * @param null $policy
+     * @return DocumentMetadata
+     */
+    public function replaceDocumentWithEntity(MetadataAware $entity, $waitForSync = false, $rev = null, $policy = null)
+    {
+        return $this->replaceDocument($entity->getMetadata()->getId(), $entity, $waitForSync, $rev, $policy);
     }
 
     /**
