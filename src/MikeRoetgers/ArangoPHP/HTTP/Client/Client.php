@@ -20,14 +20,17 @@ class Client
     private $adapter;
 
     /**
-     * @param string $databaseUrl
      * @param Adapter $adapter
+     * @param string $databaseUrl
+     * @param string $username
+     * @param string $password
      */
-    public function __construct($databaseUrl = 'http://localhost:8529', Adapter $adapter)
+    public function __construct(Adapter $adapter, $databaseUrl = 'http://localhost:8529', $username = null, $password = null)
     {
         $this->databaseUrl = $databaseUrl;
         $this->adapter = $adapter;
         $adapter->setDatabaseUrl($databaseUrl);
+        $adapter->setCredentials($username, $password);
     }
 
     /**

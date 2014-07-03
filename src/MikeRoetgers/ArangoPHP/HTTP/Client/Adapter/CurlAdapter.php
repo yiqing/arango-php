@@ -13,6 +13,16 @@ class CurlAdapter implements Adapter
     private $databaseUrl;
 
     /**
+     * @var string
+     */
+    private $username;
+
+    /**
+     * @var string
+     */
+    private $password;
+
+    /**
      * @param Request $request
      * @return Response
      */
@@ -21,6 +31,15 @@ class CurlAdapter implements Adapter
         $url = $this->databaseUrl . $request->getPath();
         $curlHandle = curl_init($url);
         curl_setopt($curlHandle, CURLOPT_RETURNTRANSFER, true);
+
+        if (!empty($this->username)) {
+            curl_setopt(
+                $curlHandle,
+                'CURLOPT_HTTPHEADER',
+                array('Authorization: Basic ' . base64_encode($this->username . ':' . $this->password))
+            );
+        }
+
         curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, $request->getMethod());
         if ($request->getMethod() == Request::METHOD_POST || $request->getMethod() == Request::METHOD_PUT) {
             curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $request->getBody());
@@ -45,5 +64,16 @@ class CurlAdapter implements Adapter
     public function setDatabaseUrl($url)
     {
         $this->databaseUrl = $url;
+    }
+
+    /**
+     * @param string $username
+     * @param string $password
+     * @return void
+     */
+    public function setCredentials($username, $password)
+    {
+        $this->username = $username;
+        $this->password = $password;
     }
 }

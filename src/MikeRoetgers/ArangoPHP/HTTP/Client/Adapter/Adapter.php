@@ -14,6 +14,13 @@ interface Adapter
     public function setDatabaseUrl($url);
 
     /**
+     * @param string $username
+     * @param string $password
+     * @return void
+     */
+    public function setCredentials($username, $password);
+
+    /**
      * @param Request $request
      * @return Response
      */
