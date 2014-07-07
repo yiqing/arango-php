@@ -198,7 +198,7 @@ class DocumentManager
 
         $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
         $request->setMethod(Request::METHOD_PUT);
-        $request->setBody($entity);
+        $request->setBody(json_encode($entity));
 
         $response = $this->client->sendRequest($request);
 
