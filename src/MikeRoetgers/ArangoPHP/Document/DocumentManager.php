@@ -120,7 +120,7 @@ class DocumentManager
      * @param mixed $entity
      * @param bool $createCollection
      * @param bool $waitForSync
-     * @return DocumentMetadata
+     * @return DocumentMetadata|MetadataAware
      * @throws InvalidRequestException
      * @throws UnknownCollectionException
      * @throws UnexpectedStatusCodeException
@@ -156,7 +156,12 @@ class DocumentManager
         switch ($response->getStatusCode()) {
             case 201:
             case 202:
-                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
+                $metadata = $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
+                if ($entity instanceof MetadataAware) {
+                    $entity->setMetadata($metadata);
+                    return $entity;
+                }
+                return $metadata;
             case 400:
                 throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
                 break;
@@ -220,11 +225,12 @@ class DocumentManager
      * @param bool $waitForSync
      * @param null $rev
      * @param null $policy
-     * @return DocumentMetadata
+     * @return void
      */
     public function replaceDocumentWithEntity(MetadataAware $entity, $waitForSync = false, $rev = null, $policy = null)
     {
-        return $this->replaceDocument($entity->getMetadata()->getId(), $entity, $waitForSync, $rev, $policy);
+        $metadata = $this->replaceDocument($entity->getMetadata()->getId(), $entity, $waitForSync, $rev, $policy);
+        $entity->setMetadata($metadata);
     }
 
     /**
