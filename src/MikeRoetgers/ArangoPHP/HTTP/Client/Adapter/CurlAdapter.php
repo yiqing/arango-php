@@ -41,7 +41,7 @@ class CurlAdapter implements Adapter
         }
 
         curl_setopt($curlHandle, CURLOPT_CUSTOMREQUEST, $request->getMethod());
-        if ($request->getMethod() == Request::METHOD_POST || $request->getMethod() == Request::METHOD_PUT) {
+        if (in_array($request->getMethod(), [Request::METHOD_POST, Request::METHOD_PUT, Request::METHOD_PATCH])) {
             curl_setopt($curlHandle, CURLOPT_POSTFIELDS, $request->getBody());
         }
 
