@@ -65,7 +65,11 @@ class SimpleQueryManager
 
     public function findFirstByExample($collectionName, array $example)
     {
-        return $this->findByExample($collectionName, $example, 0, 1)[0];
+        $result = $this->findByExample($collectionName, $example, 0, 1);
+        if (empty($result)) {
+            return [];
+        }
+        return $result[0];
     }
 
     /**
