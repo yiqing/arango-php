@@ -12,6 +12,6 @@ class UnexpectedStatusCodeException extends \Exception
      */
     public function __construct(Response $response)
     {
-        parent::__construct('Unexpected status code "' . $response->getStatusCode() . '"', $response->getStatusCode());
+        parent::__construct('Unexpected status code "' . $response->getStatusCode() . '" with body "' . $response->getBody() . '"', $response->getStatusCode());
     }
 }

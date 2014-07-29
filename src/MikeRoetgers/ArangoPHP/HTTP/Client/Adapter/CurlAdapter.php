@@ -35,7 +35,7 @@ class CurlAdapter implements Adapter
         if (!empty($this->username)) {
             curl_setopt(
                 $curlHandle,
-                'CURLOPT_HTTPHEADER',
+                CURLOPT_HTTPHEADER,
                 array('Authorization: Basic ' . base64_encode($this->username . ':' . $this->password))
             );
         }
