@@ -63,13 +63,34 @@ class SimpleQueryManager
         return $this->getResponseHandler($collectionName)->handle($this->client->sendRequest($request));
     }
 
+    /**
+     * @param $collectionName
+     * @param array $example
+     * @return mixed
+     */
     public function findFirstByExample($collectionName, array $example)
     {
-        $result = $this->findByExample($collectionName, $example, 0, 1);
-        if (empty($result)) {
-            return [];
-        }
-        return $result[0];
+        $request = new Request('/_api/simple/first-example');
+        $request->setMethod(Request::METHOD_PUT);
+
+        $body = array(
+            'collection' => $collectionName,
+            'example' => $example
+        );
+        $request->setBody(json_encode($body));
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(Response $response) use ($collectionName) {
+            if ($this->documentManager->hasMapper($collectionName)) {
+                $mapper = $this->documentManager->getMapper($collectionName);
+                return $mapper->mapDocument($response->getBodyAsArray()['document']);
+            }
+            return $response->getBodyAsArray()['document'];
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->client->sendRequest($request));
     }
 
     /**
