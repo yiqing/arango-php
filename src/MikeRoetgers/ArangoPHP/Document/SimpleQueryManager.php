@@ -78,6 +78,8 @@ class SimpleQueryManager
             'example' => $example
         );
         $request->setBody(json_encode($body));
+        $response = $this->client->sendRequest($request);
+        var_dump($response);exit;
 
         $handler = new ResponseHandler();
         $handler->onStatusCode(200)->execute(function(Response $response) use ($collectionName) {
@@ -88,7 +90,9 @@ class SimpleQueryManager
             return $response->getBodyAsArray()['document'];
         });
         $handler->onStatusCode(400)->throwInvalidRequestException();
-        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onStatusCode(404)->execute(function(Response $response){
+            return null;
+        });
         $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
         return $handler->handle($this->client->sendRequest($request));
     }
