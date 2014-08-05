@@ -64,7 +64,7 @@ class SimpleQueryManager
     }
 
     /**
-     * @param $collectionName
+     * @param string $collectionName
      * @param array $example
      * @return mixed
      */
@@ -78,8 +78,6 @@ class SimpleQueryManager
             'example' => $example
         );
         $request->setBody(json_encode($body));
-        $response = $this->client->sendRequest($request);
-        var_dump($response);exit;
 
         $handler = new ResponseHandler();
         $handler->onStatusCode(200)->execute(function(Response $response) use ($collectionName) {
@@ -93,6 +91,32 @@ class SimpleQueryManager
         $handler->onStatusCode(404)->execute(function(Response $response){
             return null;
         });
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->client->sendRequest($request));
+    }
+
+    /**
+     * @param string $collectionName
+     * @param array $example
+     * @return mixed
+     */
+    public function removeByExample($collectionName, array $example, $waitForSync = false)
+    {
+        $request = new Request('/_api/simple/remove-by-example');
+        $request->setMethod(Request::METHOD_PUT);
+
+        $body = array(
+            'collection' => $collectionName,
+            'example' => $example
+        );
+        $request->setBody(json_encode($body));
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(){
+            return true;
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
         $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
         return $handler->handle($this->client->sendRequest($request));
     }
