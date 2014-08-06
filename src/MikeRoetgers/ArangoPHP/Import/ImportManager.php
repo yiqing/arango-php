@@ -54,7 +54,7 @@ class ImportManager
         if (is_array($data)) {
             $data = json_encode($data);
         }
-        $request->setBody(json_encode($data));
+        $request->setBody($data);
 
         $response = $this->client->sendRequest($request);
 
