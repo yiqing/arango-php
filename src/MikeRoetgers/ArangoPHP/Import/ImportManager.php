@@ -46,7 +46,8 @@ class ImportManager
             'collection' => $collection,
             'waitForSync' => ($waitForSync) ? 'true' : 'false',
             'complete' => ($complete) ? 'true' : 'false',
-            'details' => ($details) ? 'true' : 'false'
+            'details' => ($details) ? 'true' : 'false',
+            'type' => 'auto'
         ];
 
         $request = new Request('/_api/import?' . http_build_query($query));
