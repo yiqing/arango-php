@@ -136,6 +136,36 @@ class SimpleQueryManager
     }
 
     /**
+     * @param string $collectionName
+     * @param array $example
+     * @param array $newValues
+     * @param bool $keepNull
+     * @param bool $waitForSync
+     * @return int
+     */
+    public function updateByExample($collectionName, array $example, array $newValues, $keepNull = false, $waitForSync = false)
+    {
+        $body = [
+            'collection' => $collectionName,
+            'example' => $example,
+            'newValue' => $newValues,
+            'keepNull' => $keepNull,
+            'waitForSync' => $waitForSync
+        ];
+
+        $request = new Request('/_api/simple/update-by-example', Request::METHOD_PUT);
+        $request->setBody(json_encode($body));
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(Response $response){
+            return $response->getBodyAsArray()['updated'];
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->client->sendRequest($request));
+    }
+
+    /**
      * @param $collectionName
      * @return ResponseHandler
      */
