@@ -15,6 +15,11 @@ class Cursor
     private $count;
 
     /**
+     * @var bool
+     */
+    private $hasMore = true;
+
+    /**
      * @param int $id
      * @param int $count
      */
@@ -40,5 +45,20 @@ class Cursor
         return $this->id;
     }
 
+    /**
+     * @return boolean
+     */
+    public function hasMore()
+    {
+        return $this->hasMore;
+    }
+
+    /**
+     * @param boolean $flag
+     */
+    public function setMore($flag = true)
+    {
+        $this->hasMore = $flag;
+    }
 
 }

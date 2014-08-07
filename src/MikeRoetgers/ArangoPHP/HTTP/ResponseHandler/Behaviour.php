@@ -4,6 +4,7 @@ namespace MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 
 use MikeRoetgers\ArangoPHP\Collection\Exception\UnknownCollectionException;
 use MikeRoetgers\ArangoPHP\Database\Exception\UnknownDatabaseException;
+use MikeRoetgers\ArangoPHP\Document\Exception\UnknownCursorException;
 use MikeRoetgers\ArangoPHP\Document\Exception\UnknownDocumentException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\ConflictException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
@@ -42,6 +43,13 @@ abstract class Behaviour
     {
         $this->callback = function() {
             throw new UnknownDatabaseException();
+        };
+    }
+
+    public function throwUnknownCursorException()
+    {
+        $this->callback = function() {
+            throw new UnknownCursorException();
         };
     }
 
