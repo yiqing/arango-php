@@ -2,6 +2,8 @@
 
 namespace MikeRoetgers\ArangoPHP\HTTP;
 
+use webignition\JsonPrettyPrinter\JsonPrettyPrinter;
+
 class Response
 {
     /**
@@ -94,5 +96,20 @@ class Response
     public function getCursor()
     {
         return $this->cursor;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        $str = 'Status Code: ' . $this->statusCode . ' | Content Type: ' . $this->contentType;
+        if (!empty($this->cursor)) {
+            $str .= ' | Cursor: ' . $this->cursor->getId();
+        }
+        $str .= ' | Body: ' . "\n";
+        $prettyPrinter = new JsonPrettyPrinter();
+        $str .= $prettyPrinter->format($this->body);
+        return $str;
     }
 }
