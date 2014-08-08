@@ -3,15 +3,10 @@
 namespace MikeRoetgers\ArangoPHP\HTTP\Client\Exception;
 
 use Exception;
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
 use MikeRoetgers\ArangoPHP\HTTP\Response;
 
-class UnexpectedStatusCodeException extends \Exception
+class UnexpectedStatusCodeException extends HTTPException
 {
-    /**
-     * @param Response $response
-     */
-    public function __construct(Response $response)
-    {
-        parent::__construct('Unexpected status code "' . $response->getStatusCode() . '" with body "' . $response->getBody() . '"', $response->getStatusCode());
-    }
+
 }

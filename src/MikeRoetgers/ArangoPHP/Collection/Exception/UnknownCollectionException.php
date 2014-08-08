@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\Collection\Exception;
 
-class UnknownCollectionException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class UnknownCollectionException extends HTTPException
 {
 
 }

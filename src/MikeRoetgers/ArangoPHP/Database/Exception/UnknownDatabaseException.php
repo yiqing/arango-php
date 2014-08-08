@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\Database\Exception;
 
-class UnknownDatabaseException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class UnknownDatabaseException extends HTTPException
 {
 
 }

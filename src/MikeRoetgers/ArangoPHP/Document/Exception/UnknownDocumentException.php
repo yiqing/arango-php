@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\Document\Exception;
 
-class UnknownDocumentException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class UnknownDocumentException extends HTTPException
 {
 
 }

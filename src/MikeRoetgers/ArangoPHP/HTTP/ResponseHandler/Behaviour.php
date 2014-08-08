@@ -2,9 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 
+use MikeRoetgers\ArangoPHP\AQL\Exception\UnknownCursorException;
 use MikeRoetgers\ArangoPHP\Collection\Exception\UnknownCollectionException;
 use MikeRoetgers\ArangoPHP\Database\Exception\UnknownDatabaseException;
-use MikeRoetgers\ArangoPHP\Document\Exception\UnknownCursorException;
 use MikeRoetgers\ArangoPHP\Document\Exception\UnknownDocumentException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\ConflictException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
@@ -27,43 +27,43 @@ abstract class Behaviour
 
     public function throwUnknownCollectionException()
     {
-        $this->callback = function() {
-            throw new UnknownCollectionException();
+        $this->callback = function(Response $response) {
+            throw new UnknownCollectionException($response);
         };
     }
 
     public function throwUnknownDocumentException()
     {
-        $this->callback = function() {
-            throw new UnknownDocumentException();
+        $this->callback = function(Response $response) {
+            throw new UnknownDocumentException($response);
         };
     }
 
     public function throwUnknownDatabaseException()
     {
-        $this->callback = function() {
-            throw new UnknownDatabaseException();
+        $this->callback = function(Response $response) {
+            throw new UnknownDatabaseException($response);
         };
     }
 
     public function throwUnknownCursorException()
     {
-        $this->callback = function() {
-            throw new UnknownCursorException();
+        $this->callback = function(Response $response) {
+            throw new UnknownCursorException($response);
         };
     }
 
     public function throwConflictException()
     {
-        $this->callback = function() {
-            throw new ConflictException();
+        $this->callback = function(Response $response) {
+            throw new ConflictException($response);
         };
     }
 
     public function throwInvalidRequestException()
     {
-        $this->callback = function() {
-            throw new InvalidRequestException();
+        $this->callback = function(Response $response) {
+            throw new InvalidRequestException($response);
         };
     }
 

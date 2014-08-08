@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\HTTP\Client\Exception;
 
-class ConflictException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class ConflictException extends HTTPException
 {
 
 }

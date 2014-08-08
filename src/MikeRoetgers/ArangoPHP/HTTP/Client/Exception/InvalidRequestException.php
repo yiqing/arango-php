@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\HTTP\Client\Exception;
 
-class InvalidRequestException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class InvalidRequestException extends HTTPException
 {
 
 }

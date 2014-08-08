@@ -2,7 +2,9 @@
 
 namespace MikeRoetgers\ArangoPHP\AQL\Exception;
 
-class UnknownCursorException extends \Exception
+use MikeRoetgers\ArangoPHP\HTTP\Exception\HTTPException;
+
+class UnknownCursorException extends HTTPException
 {
 
 }
