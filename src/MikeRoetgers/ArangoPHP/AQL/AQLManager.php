@@ -3,17 +3,15 @@
 namespace MikeRoetgers\ArangoPHP\AQL;
 
 use MikeRoetgers\ArangoPHP\Document\DocumentManager;
-use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
-use MikeRoetgers\ArangoPHP\HTTP\Request;
 use MikeRoetgers\ArangoPHP\HTTP\Response;
 use MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 
 class AQLManager
 {
     /**
-     * @var Client
+     * @var AQLService
      */
-    private $client;
+    private $aqlService;
 
     /**
      * @var CursorManager
@@ -26,34 +24,24 @@ class AQLManager
     private $documentManager;
 
     /**
-     * @param Client $client
+     * @param AQLService $aqlService
      * @param CursorManager $cursorManager
      * @param DocumentManager $documentManager
      */
-    function __construct(Client $client, CursorManager $cursorManager, DocumentManager $documentManager)
+    public function __construct(AQLService $aqlService, CursorManager $cursorManager, DocumentManager $documentManager)
     {
-        $this->client = $client;
+        $this->aqlService = $aqlService;
         $this->cursorManager = $cursorManager;
         $this->documentManager = $documentManager;
     }
 
     /**
      * @param Query $query
-     * @param null $useMapperForCollection
-     * @return array|mixed
+     * @param string $mapperName
+     * @return mixed
      */
-    public function query(Query $query, $useMapperForCollection = null)
+    public function query(Query $query, $mapperName)
     {
-        $body = [
-            'query' => $query->getQuery(),
-            'count' => $query->getCount(),
-            'batchSize' => $query->getBatchSize(),
-            'bindVars' => $query->getVars(),
-            'options' => $query->getOptions()
-        ];
-
-        $request = new Request('/_api/cursor', Request::METHOD_POST);
-        $request->setBody(json_encode($body));
         $handler = new ResponseHandler();
         $handler->onStatusCode(201)->execute(function(Response $response) {
             return $response;
@@ -62,8 +50,7 @@ class AQLManager
         $handler->onStatusCode(404)->throwUnknownCollectionException();
         $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
 
-        /** @var Response $response */
-        $response = $handler->handle($this->client->sendRequest($request));
+        $response = $this->aqlService->query($query);
         $data = $response->getBodyAsArray()['result'];
         $cursor = $response->getCursor();
         if (!empty($cursor)) {
@@ -77,9 +64,6 @@ class AQLManager
             } while ($cursor !== false);
         }
 
-        if ($useMapperForCollection !== null) {
-            return $this->documentManager->getMapper($useMapperForCollection)->mapDocuments($data);
-        }
-        return $data;
+        return $this->documentManager->getMapper($mapperName)->mapDocuments($data);
     }
 }
