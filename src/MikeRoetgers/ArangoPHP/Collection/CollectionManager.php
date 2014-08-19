@@ -25,6 +25,16 @@ class CollectionManager
     private $collectionMapper;
 
     /**
+     * @param CollectionService $collectionService
+     * @param GenericMapper $collectionMapper
+     */
+    function __construct(CollectionService $collectionService, GenericMapper $collectionMapper)
+    {
+        $this->collectionMapper = $collectionMapper;
+        $this->collectionService = $collectionService;
+    }
+
+    /**
      * @param string $name
      * @param CreateCollectionOptions $options
      * @return Collection
