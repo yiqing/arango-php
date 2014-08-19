@@ -8,14 +8,16 @@ use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\UnexpectedStatusCodeException;
 use MikeRoetgers\ArangoPHP\HTTP\Request;
+use MikeRoetgers\ArangoPHP\HTTP\Response;
+use MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 use MikeRoetgers\DataMapper\GenericMapper;
 
 class CollectionManager
 {
     /**
-     * @var Client
+     * @var CollectionService
      */
-    private $client;
+    private $collectionService;
 
     /**
      * @var GenericMapper
@@ -30,21 +32,12 @@ class CollectionManager
      */
     public function createCollection($name, CreateCollectionOptions $options = null)
     {
-        if ($options === null) {
-            $options = new CreateCollectionOptions();
-        }
-
-        $request = new Request('/_api/collection', Request::METHOD_POST);
-        $request->setBody(json_encode(array_merge(array('name' => $name), $options->toArray())));
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return $this->collectionMapper->mapArrayToEntity($response->getBodyAsArray());
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(Response $response){
+            return $this->collectionMapper->mapArrayToEntity($response->getBodyAsArray());
+        });
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->collectionService->createCollection($name, $options));
     }
 
     /**
@@ -56,20 +49,14 @@ class CollectionManager
      */
     public function deleteCollection($name)
     {
-        $request = new Request('/_api/collection/' . $name, Request::METHOD_DELETE);
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return true;
-            case 400:
-                throw new InvalidRequestException();
-            case 404:
-                throw new UnknownCollectionException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(){
+            return true;
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->collectionService->deleteCollection($name));
     }
 
     /**
@@ -81,20 +68,14 @@ class CollectionManager
      */
     public function truncateCollection($name)
     {
-        $request = new Request('/_api/collection/' . $name . '/truncate', Request::METHOD_PUT);
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return true;
-            case 400:
-                throw new InvalidRequestException();
-            case 404:
-                throw new UnknownCollectionException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(){
+            return true;
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->collectionService->truncateCollection($name));
     }
 
     /**
@@ -105,18 +86,14 @@ class CollectionManager
      */
     public function getCollection($name)
     {
-        $request = new Request('/_api/collection/' . $name);
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return $this->collectionMapper->mapArrayToEntity($response->getBodyAsArray());
-            case 404:
-                throw new UnknownCollectionException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(Response $response){
+            return $this->collectionMapper->mapArrayToEntity($response->getBodyAsArray());
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->collectionService->getCollection($name));
     }
 
     /**
@@ -128,19 +105,13 @@ class CollectionManager
      */
     public function countDocumentsInCollection($name)
     {
-        $request = new Request('/_api/collection/' . $name . '/count');
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return $this->collectionMapper->mapArrayToEntity($response->getBodyAsArray()['count']);
-            case 400:
-                throw new InvalidRequestException();
-            case 404:
-                throw new UnknownCollectionException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function(Response $response){
+            return $response->getBodyAsArray()['count'];
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($this->collectionService->countDocumentsInCollection($name));
     }
 }
