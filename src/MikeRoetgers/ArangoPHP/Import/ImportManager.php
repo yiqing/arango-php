@@ -13,9 +13,9 @@ use MikeRoetgers\ArangoPHP\Import\Exception\ImportException;
 class ImportManager
 {
     /**
-     * @var Client
+     * @var ImportService
      */
-    private $client;
+    private $importService;
 
     /**
      * @var DocumentManager
@@ -23,44 +23,28 @@ class ImportManager
     private $documentManager;
 
     /**
-     * @param Client $client
+     * @param ImportService $importService
      * @param DocumentManager $documentManager
      */
-    public function __construct(Client $client, DocumentManager $documentManager)
+    public function __construct(ImportService $importService, DocumentManager $documentManager)
     {
-        $this->client = $client;
+        $this->importService = $importService;
         $this->documentManager = $documentManager;
     }
 
+
     /**
-     * @param string $collection
-     * @param string|array $data json string or simple array with data
-     * @param bool $waitForSync
-     * @param bool $complete
-     * @param bool $details
+     * @param string $collectionName
+     * @param string $json
+     * @param ImportOptions $options
      * @return bool
      */
-    public function import($collection, $data, $waitForSync = false, $complete = false, $details = false)
+    public function importDocuments($collectionName, $json, ImportOptions $options = null)
     {
-        $query = [
-            'collection' => $collection,
-            'waitForSync' => ($waitForSync) ? 'true' : 'false',
-            'complete' => ($complete) ? 'true' : 'false',
-            'details' => ($details) ? 'true' : 'false',
-            'type' => 'auto'
-        ];
-
-        $request = new Request('/_api/import?' . http_build_query($query));
-        $request->setMethod(Request::METHOD_POST);
-        if (is_array($data)) {
-            $data = json_encode($data);
-        }
-        $request->setBody($data);
-
-        $response = $this->client->sendRequest($request);
+        $response = $this->importService->importDocuments($collectionName, $json, $options);
 
         $handler = new ResponseHandler();
-        $handler->onStatusCode(201)->execute(function(Response $response) {
+        $handler->onStatusCode(201)->execute(function() {
             return true;
         });
         $handler->onEverythingElse()->execute(function(Response $response) {
@@ -74,21 +58,43 @@ class ImportManager
     }
 
     /**
-     * @param string $collection
-     * @param array $entities
-     * @param bool $waitForSync
-     * @param bool $complete
-     * @param bool $details
+     * @param $collectionName
+     * @param $json
+     * @param ImportOptions $options
      * @return bool
+     */
+    public function importHeadersAndValues($collectionName, $json, ImportOptions $options = null)
+    {
+        $response = $this->importService->importHeadersAndValues($collectionName, $json, $options);
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(201)->execute(function() {
+            return true;
+        });
+        $handler->onEverythingElse()->execute(function(Response $response) {
+            $body = $response->getBodyAsArray();
+            if (empty($body['errorMessage'])) {
+                throw new UnexpectedStatusCodeException($response);
+            }
+            throw new ImportException($body['errorMessage']);
+        });
+        return $handler->handle($response);
+    }
+
+    /**
+     * @param string $collectionName
+     * @param array $entities
+     * @param ImportOptions $options
+     * @return mixed
      * @throws \RuntimeException
      */
-    public function importEntities($collection, array $entities, $waitForSync = false, $complete = false, $details = false)
+    public function importEntities($collectionName, array $entities, ImportOptions $options = null)
     {
-        if (!$this->documentManager->hasMapper($collection)) {
+        if (!$this->documentManager->hasMapper($collectionName)) {
             throw new \RuntimeException('importEntities method can only be used with entities that have a registered mapper.');
         }
 
-        $mapper = $this->documentManager->getMapper($collection);
-        return $this->import($collection, $mapper->mapEntities($entities), $waitForSync, $complete, $details);
+        $mapper = $this->documentManager->getMapper($collectionName);
+        return $this->importDocuments($collectionName, json_encode($mapper->mapEntities($entities)), $options);
     }
 }
