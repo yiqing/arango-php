@@ -30,6 +30,7 @@ class CursorManager
     public function fetchNextBatch(Cursor $cursor)
     {
         $request = new Request('/_api/cursor/' . $cursor->getId());
+        $request->setMethod(Request::METHOD_POST);
 
         $handler = new ResponseHandler();
         $handler->onStatusCode(200)->execute(function(Response $response) {
