@@ -41,8 +41,7 @@ class Client
     {
         $response = $this->adapter->sendRequest($request);
         if (!empty($response->getBodyAsArray()['hasMore']) && $response->getBodyAsArray()['hasMore'] === true) {
-            $body = $response->getBodyAsArray();
-            $cursor = new Cursor($body['id'], $body['count']);
+            $cursor = new Cursor($response->getBodyAsArray()['id']);
             $response->setCursor($cursor);
         }
         return $response;

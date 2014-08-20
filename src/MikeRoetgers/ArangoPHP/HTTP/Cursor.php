@@ -10,31 +10,16 @@ class Cursor
     private $id;
 
     /**
-     * @var int
-     */
-    private $count;
-
-    /**
      * @var bool
      */
     private $hasMore = true;
 
     /**
      * @param int $id
-     * @param int $count
      */
-    public function __construct($id, $count)
+    public function __construct($id)
     {
         $this->id = $id;
-        $this->count = $count;
-    }
-
-    /**
-     * @return int
-     */
-    public function getCount()
-    {
-        return $this->count;
     }
 
     /**
