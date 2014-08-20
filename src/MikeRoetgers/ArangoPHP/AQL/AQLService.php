@@ -32,9 +32,12 @@ class AQLService
             'query' => $query->getQuery(),
             'count' => $query->getCount(),
             'batchSize' => $query->getBatchSize(),
-            'bindVars' => $query->getVars(),
             'options' => $query->getOptions()
         ];
+
+        if (count($query->getVars()) > 0) {
+            $body['bindVars'] = $query->getVars();
+        }
 
         $request = new Request('/_api/cursor', Request::METHOD_POST);
         $request->setBody(json_encode($body));
