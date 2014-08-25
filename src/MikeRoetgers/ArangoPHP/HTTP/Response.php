@@ -99,6 +99,22 @@ class Response
     }
 
     /**
+     * @return bool
+     */
+    public function isSuccessful()
+    {
+        return $this->statusCode >= 200 && $this->statusCode < 300;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isError()
+    {
+        return $this->statusCode >= 400 && $this->statusCode < 600;
+    }
+
+    /**
      * @return string
      */
     public function __toString()

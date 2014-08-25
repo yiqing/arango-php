@@ -10,6 +10,7 @@ use MikeRoetgers\ArangoPHP\Document\Options\ReplaceDocumentOptions;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
 use MikeRoetgers\ArangoPHP\HTTP\Request;
 use MikeRoetgers\ArangoPHP\HTTP\Response;
+use MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 
 class DocumentService
 {
@@ -17,6 +18,11 @@ class DocumentService
      * @var Client
      */
     private $client;
+
+    /**
+     * @var bool
+     */
+    private $errorHandling = true;
 
     /**
      * @param Client $client
@@ -47,7 +53,39 @@ class DocumentService
             $request->addHeader('If-None-Match', $options->ifNoneMatch);
         }
 
-        return $this->client->sendRequest($request);
+        $response = $this->client->sendRequest($request);
+
+        if (!$this->shouldHandleErrors()) {
+            return $response;
+        }
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->returnResponse();
+        $handler->onStatusCode(304)->returnResponse();
+        $handler->onStatusCode(404)->throwUnknownDocumentException();
+        $handler->onStatusCode(412)->returnResponse();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
+    }
+
+    /**
+     * @param string $collectionName
+     * @return Response
+     */
+    public function getDocumentList($collectionName)
+    {
+        $request = new Request('/_api/document?collection=' . $collectionName);
+        $response = $this->client->sendRequest($request);
+
+        if (!$this->shouldHandleErrors()) {
+            return $response;
+        }
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->returnResponse();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
     }
 
     /**
@@ -72,7 +110,19 @@ class DocumentService
         $request->setMethod(Request::METHOD_POST);
         $request->setBody($document);
 
-        return $this->client->sendRequest($request);
+        $response = $this->client->sendRequest($request);
+
+        if (!$this->shouldHandleErrors()) {
+            return $response;
+        }
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(201)->returnResponse();
+        $handler->onStatusCode(202)->returnResponse();
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownCollectionException();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
     }
 
     /**
@@ -101,14 +151,22 @@ class DocumentService
 
         $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
         $request->setMethod(Request::METHOD_PUT);
+        $request->setBody($document);
 
         if ($options->ifMatch !== null) {
             $request->addHeader('If-Match', $options->ifMatch);
         }
 
-        $request->setBody($document);
+        $response = $this->client->sendRequest($request);
 
-        return $this->client->sendRequest($request);
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(201)->returnResponse();
+        $handler->onStatusCode(202)->returnResponse();
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownDocumentException();
+        $handler->onStatusCode(412)->returnResponse();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
     }
 
     /**
@@ -144,7 +202,16 @@ class DocumentService
             $request->addHeader('If-Match', $options->ifMatch);
         }
 
-        return $this->client->sendRequest($request);
+        $response = $this->client->sendRequest($request);
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(201)->returnResponse();
+        $handler->onStatusCode(202)->returnResponse();
+        $handler->onStatusCode(400)->throwInvalidRequestException();
+        $handler->onStatusCode(404)->throwUnknownDocumentException();
+        $handler->onStatusCode(412)->returnResponse();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
     }
 
     /**
@@ -177,6 +244,22 @@ class DocumentService
             $request->addHeader('If-Match', $options->ifMatch);
         }
 
-        return $this->client->sendRequest($request);
+        $response = $this->client->sendRequest($request);
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->returnResponse();
+        $handler->onStatusCode(202)->returnResponse();
+        $handler->onStatusCode(404)->throwUnknownDocumentException();
+        $handler->onStatusCode(412)->returnResponse();
+        $handler->onEverythingElse()->throwUnexpectedStatusCodeException();
+        return $handler->handle($response);
+    }
+
+    /**
+     * @return bool
+     */
+    private function shouldHandleErrors()
+    {
+        return $this->errorHandling;
     }
 }

@@ -74,5 +74,12 @@ abstract class Behaviour
         };
     }
 
+    public function returnResponse()
+    {
+        $this->callback = function(Response $response) {
+            return $response;
+        };
+    }
+
     abstract public function isValid(Response $response);
 }

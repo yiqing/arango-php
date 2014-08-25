@@ -4,10 +4,12 @@ namespace MikeRoetgers\ArangoPHP\Document;
 
 use MikeRoetgers\ArangoPHP\Collection\Exception\UnknownCollectionException;
 use MikeRoetgers\ArangoPHP\Document\Exception\UnknownDocumentException;
+use MikeRoetgers\ArangoPHP\Document\Options\GetDocumentOptions;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\UnexpectedStatusCodeException;
 use MikeRoetgers\ArangoPHP\HTTP\Request;
+use MikeRoetgers\ArangoPHP\HTTP\ResponseHandler;
 
 class DocumentManager
 {
@@ -22,17 +24,17 @@ class DocumentManager
     private $metadataMapper;
 
     /**
-     * @var Client
+     * @var DocumentService
      */
-    private $client;
+    private $documentService;
 
     /**
-     * @param Client $client
+     * @param DocumentService $documentService
      * @param DocumentMetadataMapper $metadataMapper
      */
-    public function __construct(Client $client, DocumentMetadataMapper $metadataMapper)
+    public function __construct(DocumentService $documentService, DocumentMetadataMapper $metadataMapper)
     {
-        $this->client = $client;
+        $this->documentService = $documentService;
         $this->metadataMapper = $metadataMapper;
     }
 
@@ -53,15 +55,19 @@ class DocumentManager
      * @throws UnexpectedStatusCodeException
      * @throws Exception\UnknownDocumentException
      */
-    public function getDocument($documentHandle, $etag = null)
+    public function getDocument($documentHandle, GetDocumentOptions $options = null)
     {
-        $request = new Request('/_api/document/' . $documentHandle);
-
-        if ($etag !== null) {
-            $request->addHeader('If-Match', $etag);
+        if ($options === null) {
+            $options = new GetDocumentOptions();
         }
 
-        $response = $this->client->sendRequest($request);
+        $response = $this->documentService->getDocument($documentHandle, $options);
+
+        $handler = new ResponseHandler();
+        $handler->onStatusCode(200)->execute(function() {
+
+        });
+        $handler->onStatusCode(400)->throwInvalidRequestException();
 
         switch ($response->getStatusCode()) {
             case 200:
