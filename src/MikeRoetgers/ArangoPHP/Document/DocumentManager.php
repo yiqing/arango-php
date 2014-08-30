@@ -4,7 +4,10 @@ namespace MikeRoetgers\ArangoPHP\Document;
 
 use MikeRoetgers\ArangoPHP\Collection\Exception\UnknownCollectionException;
 use MikeRoetgers\ArangoPHP\Document\Exception\UnknownDocumentException;
+use MikeRoetgers\ArangoPHP\Document\Options\CreateDocumentOptions;
+use MikeRoetgers\ArangoPHP\Document\Options\DeleteDocumentOptions;
 use MikeRoetgers\ArangoPHP\Document\Options\GetDocumentOptions;
+use MikeRoetgers\ArangoPHP\Document\Options\ReplaceDocumentOptions;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Client;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\InvalidRequestException;
 use MikeRoetgers\ArangoPHP\HTTP\Client\Exception\UnexpectedStatusCodeException;
@@ -49,287 +52,49 @@ class DocumentManager
 
     /**
      * @param string $documentHandle
-     * @param string $etag if provided and etag does not match, returns false
-     * @return bool|mixed
-     * @throws InvalidRequestException
-     * @throws UnexpectedStatusCodeException
-     * @throws Exception\UnknownDocumentException
+     * @param Options\GetDocumentOptions $options
+     * @return array
      */
     public function getDocument($documentHandle, GetDocumentOptions $options = null)
     {
-        if ($options === null) {
-            $options = new GetDocumentOptions();
-        }
-
         $response = $this->documentService->getDocument($documentHandle, $options);
-
-        $handler = new ResponseHandler();
-        $handler->onStatusCode(200)->execute(function() {
-
-        });
-        $handler->onStatusCode(400)->throwInvalidRequestException();
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                $collectionName = explode('/', $documentHandle)[0];
-                if ($this->hasMapper($collectionName)) {
-                    $result = $response->getBodyAsArray();
-                    $entity = $this->getMapper($collectionName)->mapDocument($result);
-                    if ($entity instanceof MetadataAware) {
-                        $metadata = $this->metadataMapper->mapArrayToEntity($result);
-                        $entity->setMetadata($metadata);
-                    }
-                    return $entity;
-                }
-                return $response->getBodyAsArray();
-                break;
-            case 400:
-                throw new InvalidRequestException();
-                break;
-            case 404:
-                throw new UnknownDocumentException();
-                break;
-            case 412:
-                return false;
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
-    }
-
-    /**
-     * @param string $collectionName
-     * @return array
-     * @throws UnknownCollectionException
-     * @throws UnexpectedStatusCodeException
-     */
-    public function getDocumentsFromCollection($collectionName)
-    {
-        $query = array('collectionName' => $collectionName);
-
-        $request = new Request('/_api/document?' . http_build_query($query));
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return $response->getBodyAsArray()['documents'];
-            case 404:
-                throw new UnknownCollectionException();
-                break;
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
-    }
-
-    /**
-     * @param string $collectionName
-     * @param mixed $entity
-     * @param bool $createCollection
-     * @param bool $waitForSync
-     * @return DocumentMetadata|MetadataAware
-     * @throws InvalidRequestException
-     * @throws UnknownCollectionException
-     * @throws UnexpectedStatusCodeException
-     */
-    public function createDocument($collectionName, $entity, $createCollection = false, $waitForSync = false)
-    {
-        if ($this->hasMapper($collectionName)) {
-            $entity = $this->getMapper($collectionName)->mapEntity($entity);
-        }
-
-        $query = array(
-            'collection' => $collectionName
-        );
-
-        if ($createCollection) {
-            $query['createCollection'] = 'true';
-        } else {
-            $query['createCollection'] = 'false';
-        }
-
-        if ($waitForSync) {
-            $query['waitForSync'] = 'true';
-        } else {
-            $query['waitForSync'] = 'false';
-        }
-
-        $request = new Request('/_api/document?' . http_build_query($query));
-        $request->setMethod(Request::METHOD_POST);
-        $request->setBody(json_encode($entity));
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 201:
-            case 202:
-                $metadata = $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
-                if ($entity instanceof MetadataAware) {
-                    $entity->setMetadata($metadata);
-                    return $entity;
-                }
-                return $metadata;
-            case 400:
-                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
-                break;
-            case 404:
-                throw new UnknownCollectionException();
-                break;
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
-    }
-
-    /**
-     * @param string $documentHandle
-     * @param mixed $entity
-     * @param bool $waitForSync
-     * @param null $rev
-     * @param null $policy
-     * @return DocumentMetadata
-     * @throws InvalidRequestException
-     * @throws UnexpectedStatusCodeException
-     * @throws Exception\UnknownDocumentException
-     *
-     * @todo if-match not implemented, $rev and $policy without functionality
-     */
-    public function replaceDocument($documentHandle, $entity, $waitForSync = false, $rev = null, $policy = null)
-    {
         $collectionName = explode('/', $documentHandle)[0];
-        if ($this->hasMapper($collectionName)) {
-            $entity = $this->getMapper($collectionName)->mapEntity($entity);
-        }
+        $mapper = $this->getMapper($collectionName);
+        return $mapper->mapDocuments($response->getBodyAsArray()['result']);
+    }
 
-        $query = array();
-
-        if ($waitForSync) {
-            $query['waitForSync'] = 'true';
-        } else {
-            $query['waitForSync'] = 'false';
-        }
-
-        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
-        $request->setMethod(Request::METHOD_PUT);
-        $request->setBody(json_encode($entity));
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 201:
-            case 202:
-                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
-            case 400:
-                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
-            case 404:
-                throw new UnknownDocumentException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+    /**
+     * @param string $collectionName
+     * @param MetadataAware $entity
+     * @param CreateDocumentOptions $options
+     * @return MetadataAware
+     */
+    public function createDocument($collectionName, MetadataAware $entity, CreateDocumentOptions $options = null)
+    {
+        $document = $this->getMapper($collectionName)->mapEntity($entity);
+        $response = $this->documentService->createDocument($collectionName, $document, $options);
+        $entity->setMetadata($this->metadataMapper->mapArrayToEntity($response->getBodyAsArray()));
+        return $entity;
     }
 
     /**
      * @param MetadataAware $entity
-     * @param bool $waitForSync
-     * @param null $rev
-     * @param null $policy
-     * @return void
+     * @param Options\ReplaceDocumentOptions $options
      */
-    public function replaceDocumentWithEntity(MetadataAware $entity, $waitForSync = false, $rev = null, $policy = null)
+    public function replaceDocument(MetadataAware $entity, ReplaceDocumentOptions $options = null)
     {
-        $metadata = $this->replaceDocument($entity->getMetadata()->getId(), $entity, $waitForSync, $rev, $policy);
-        $entity->setMetadata($metadata);
+        $collectionName = explode('/', $entity->getMetadata()->getId())[0];
+        $response = $this->documentService->replaceDocument(
+            $entity->getMetadata()->getId(),
+            $this->getMapper($collectionName)->mapEntity($entity),
+            $options
+        );
+        $entity->setMetadata($this->metadataMapper->mapArrayToEntity($response->getBodyAsArray()));
     }
 
-    /**
-     * @param string $documentHandle
-     * @param array $fields fields which shall be updated ["name" => "value]
-     * @param bool $keepNull
-     * @param bool $waitForSync
-     * @param null $rev
-     * @param null $policy
-     * @return DocumentMetadata
-     * @throws InvalidRequestException
-     * @throws UnexpectedStatusCodeException
-     * @throws Exception\UnknownDocumentException
-     *
-     * @todo if-match not implemented, $rev and $policy without functionality
-     */
-    public function partiallyUpdateDocument($documentHandle, array $fields, $keepNull = false, $waitForSync = false, $rev = null, $policy = null)
+    public function deleteDocument(MetadataAware $entity, DeleteDocumentOptions $options = null)
     {
-        $query = array();
-        $query['waitForSync'] = ($waitForSync) ? 'true' : 'false';
-        $query['keepNull'] = ($keepNull) ? 'true' : 'false';
-
-        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
-        $request->setMethod(Request::METHOD_PATCH);
-        $request->setBody(json_encode($fields));
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 201:
-            case 202:
-                return $this->metadataMapper->mapArrayToEntity($response->getBodyAsArray());
-            case 400:
-                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
-            case 404:
-                throw new UnknownDocumentException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
-    }
-
-    /**
-     * @param string|MetadataAware $documentHandle
-     * @param bool $waitForSync
-     * @param null $rev
-     * @param null $policy
-     * @return bool
-     * @throws InvalidRequestException
-     * @throws UnexpectedStatusCodeException
-     * @throws Exception\UnknownDocumentException
-     *
-     * @todo if-match not implemented, $rev and $policy without functionality
-     */
-    public function deleteDocument($documentHandle, $waitForSync = false, $rev = null, $policy = null)
-    {
-        if ($documentHandle instanceof MetadataAware) {
-            $documentHandle = $documentHandle->getMetadata()->getId();
-        }
-
-        $query = array();
-        $query['waitForSync'] = ($waitForSync) ? 'true' : 'false';
-
-        $request = new Request('/_api/document/' . $documentHandle . '?' . http_build_query($query));
-        $request->setMethod(Request::METHOD_DELETE);
-
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-            case 202:
-                return true;
-            case 400:
-                throw new InvalidRequestException($response->getBodyAsArray()['errorMessage']);
-            case 404:
-                throw new UnknownDocumentException();
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
-    }
-
-    public function documentExists($documentHandle, $rev = null)
-    {
-        $request = new Request('/_api/document/' . $documentHandle, Request::METHOD_HEAD);
-        $response = $this->client->sendRequest($request);
-
-        switch ($response->getStatusCode()) {
-            case 200:
-                return true;
-            case 404:
-                return false;
-            default:
-                throw new UnexpectedStatusCodeException($response);
-        }
+        $this->documentService->deleteDocument($entity->getMetadata()->getId(), $options);
     }
 
     /**
@@ -343,10 +108,22 @@ class DocumentManager
 
     /**
      * @param $collectionName
+     * @throws \RuntimeException
      * @return DocumentMapper
      */
     public function getMapper($collectionName)
     {
+        if (!$this->hasMapper($collectionName)) {
+            throw new \RuntimeException('Mapper with name "' . $collectionName . '" is unknown.');
+        }
         return $this->mappers[$collectionName];
+    }
+
+    /**
+     * @return DocumentService
+     */
+    public function getDocumentService()
+    {
+        return $this->documentService;
     }
 }
